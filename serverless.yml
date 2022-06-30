@@ -1,0 +1,65 @@
+service: gestion-empleados-api
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  profile: lbriceno-personal
+  stage: ${opt:stage}
+  region: ${opt:region}
+  apiGateway:
+      request:
+        schemas:
+          empleado-input-model:
+            name: EmpleadoInputModel
+            schema: ${file(infraestructure/handlers/schemas/empleados-schema.json)}
+            description: "Validacion de los datos del empleado"
+  environment:
+    MYSQL_HOST: ${file(./config/${opt:stage, 'dev'}.json):MYSQL_HOST}
+    MYSQL_PORT: ${file(./config/${opt:stage, 'dev'}.json):MYSQL_PORT}
+    MYSQL_USER: ${file(./config/${opt:stage, 'dev'}.json):MYSQL_USER}
+    MYSQL_PW: ${file(./config/${opt:stage, 'dev'}.json):MYSQL_PW}
+    MYSQL_DB: ${file(./config/${opt:stage, 'dev'}.json):MYSQL_DB}
+
+plugins:
+  - serverless-offline
+
+functions:
+  getEmpleados:
+    handler: infraestructure/handlers/empleados-handler.getEmpleados
+    events:
+      - http:
+          path: empleados       # https://dominio.fulanito/{stage}/empleados
+          method: get
+  createEmpleado:
+    handler: infraestructure/handlers/empleados-handler.createEmpleado
+    events:
+      - http:
+          path: empleados       # https://dominio.fulanito/{stage}/empleados
+          method: post
+          request:
+            schemas:
+              application/json: empleado-input-model
+  updateEmpleado:
+    handler: infraestructure/handlers/empleados-handler.updateEmpleado
+    events:
+      - http:
+          path: empleados/{id}       # https://dominio.fulanito/{stage}/empleados/{id}
+          method: put
+          request:
+            schemas:
+              application/json: empleado-input-model
+  deleteEmpleado:
+    handler: infraestructure/handlers/empleados-handler.deleteEmpleado
+    events:
+      - http:
+          path: empleados/{id}       # https://dominio.fulanito/{stage}/empleados/{id}
+          method: delete
+  getDetailEmpleado:
+    handler: infraestructure/handlers/empleados-handler.getDetailEmpleado
+    events:
+      - http:
+          path: empleados/{id}       # https://dominio.fulanito/{stage}/empleados/{id}
+          method: get
